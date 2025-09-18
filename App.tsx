@@ -8,8 +8,8 @@ import EventDetailsScreen from './src/screens/EventDetailsScreen';
 
 export type RootStackParamList = {
   EventList: undefined;
-  AddEvent: { event?: EventItem } | undefined; // optional for editing
-  EventDetails: { event: EventItem };         // required event object
+  AddEvent: { event?: EventItem } | undefined; 
+  EventDetails: { event: EventItem };        
 };
 
 
