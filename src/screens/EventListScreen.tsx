@@ -18,7 +18,10 @@ export default function EventListScreen({ navigation }: Props) {
 
   const categories: (EventItem['category'] | 'All')[] = ['All', 'Work', 'Personal', 'Birthday', 'Meeting'];
 
-  // Load events
+
+
+
+
   const loadEvents = async () => {
     try {
       const stored = await AsyncStorage.getItem('events');
@@ -34,10 +37,17 @@ export default function EventListScreen({ navigation }: Props) {
     }
   };
 
+
+
+
   useEffect(() => {
     const unsubscribe = navigation.addListener('focus', loadEvents);
     return unsubscribe;
   }, [navigation]);
+
+
+
+
 
   const renderBadge = (event: EventItem) => {
     const eventDate = new Date(event.date);
@@ -45,7 +55,9 @@ export default function EventListScreen({ navigation }: Props) {
     return 'Upcoming';
   };
 
-  // Filtered and sorted events
+
+
+
   const filteredEvents = events
     .filter((e) => {
       const matchesSearch = e.title.toLowerCase().includes(searchText.toLowerCase());
@@ -60,6 +72,10 @@ export default function EventListScreen({ navigation }: Props) {
       if (!isToday(dateA) && isToday(dateB)) return 1;
       return dateA.getTime() - dateB.getTime();
     });
+
+
+
+
 
   return (
     <View style={styles.container}>
@@ -81,21 +97,23 @@ export default function EventListScreen({ navigation }: Props) {
       <TouchableOpacity style={styles.dateFilter} onPress={() => setShowDatePicker(true)}>
         <Text>{dateFilter ? format(dateFilter, 'PPP') : 'Filter by date'}</Text>
       </TouchableOpacity>
-{showDatePicker && (
-  <DateTimePicker
-    value={dateFilter || new Date()}
-    mode="date"
-    display="default"
-    onChange={(event, selectedDate) => {
-      setShowDatePicker(false);
-      if (event.type === 'set' && selectedDate) {
-        setDateFilter(selectedDate); // user selected a date
-      } else if (event.type === 'dismissed') {
-        setDateFilter(null); // user cancelled, remove date filter
-      }
-    }}
-  />
-)}
+
+
+    {showDatePicker && (
+      <DateTimePicker
+      value={dateFilter || new Date()}
+       mode="date"
+       display="default"
+          onChange={(event, selectedDate) => {
+          setShowDatePicker(false);
+          if (event.type === 'set' && selectedDate) {
+             setDateFilter(selectedDate); // user selected a date
+                 } else if (event.type === 'dismissed') {
+             setDateFilter(null); // user cancelled, remove date filter
+             }
+          }}
+        />
+    )}
 
 
       {/* Category filter */}
@@ -164,6 +182,10 @@ export default function EventListScreen({ navigation }: Props) {
     </View>
   );
 }
+
+
+
+
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#f8fafc' },
