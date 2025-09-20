@@ -1,5 +1,13 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, FlatList, StyleSheet, TouchableOpacity, TextInput } from 'react-native';
+import { View, StyleSheet, FlatList } from 'react-native';
+import {
+  Text,
+  TextInput,
+  Button,
+  Card,
+  Chip,
+  FAB,
+} from 'react-native-paper';
 import { EventItem } from '../models/Event';
 import { format, isToday, isAfter, isSameDay } from 'date-fns';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -16,11 +24,13 @@ export default function EventListScreen({ navigation }: Props) {
   const [dateFilter, setDateFilter] = useState<Date | null>(null);
   const [showDatePicker, setShowDatePicker] = useState(false);
 
-  const categories: (EventItem['category'] | 'All')[] = ['All', 'Work', 'Personal', 'Birthday', 'Meeting'];
-
-
-
-
+  const categories: (EventItem['category'] | 'All')[] = [
+    'All',
+    'Work',
+    'Personal',
+    'Birthday',
+    'Meeting',
+  ];
 
   const loadEvents = async () => {
     try {
@@ -28,7 +38,9 @@ export default function EventListScreen({ navigation }: Props) {
       let loaded: EventItem[] = stored ? JSON.parse(stored) : [];
 
       const now = new Date();
-      loaded = loaded.filter((e) => isAfter(new Date(e.date), now) || isToday(new Date(e.date)));
+      loaded = loaded.filter(
+        (e) => isAfter(new Date(e.date), now) || isToday(new Date(e.date))
+      );
 
       setEvents(loaded);
       await AsyncStorage.setItem('events', JSON.stringify(loaded));
@@ -37,26 +49,16 @@ export default function EventListScreen({ navigation }: Props) {
     }
   };
 
-
-
-
   useEffect(() => {
     const unsubscribe = navigation.addListener('focus', loadEvents);
     return unsubscribe;
   }, [navigation]);
-
-
-
-
 
   const renderBadge = (event: EventItem) => {
     const eventDate = new Date(event.date);
     if (isToday(eventDate)) return 'Today';
     return 'Upcoming';
   };
-
-
-
 
   const filteredEvents = events
     .filter((e) => {
@@ -73,10 +75,6 @@ export default function EventListScreen({ navigation }: Props) {
       return dateA.getTime() - dateB.getTime();
     });
 
-
-
-
-
   return (
     <View style={styles.container}>
       {/* Header */}
@@ -88,52 +86,57 @@ export default function EventListScreen({ navigation }: Props) {
       {/* Search bar */}
       <TextInput
         placeholder="Search by title..."
+        mode="outlined"
         style={styles.searchInput}
         value={searchText}
         onChangeText={setSearchText}
       />
 
       {/* Filter by date */}
-      <TouchableOpacity style={styles.dateFilter} onPress={() => setShowDatePicker(true)}>
-        <Text>{dateFilter ? format(dateFilter, 'PPP') : 'Filter by date'}</Text>
-      </TouchableOpacity>
+      <Button
+        mode="outlined"
+        style={styles.dateFilter}
+        onPress={() => setShowDatePicker(true)}
+      >
+        {dateFilter ? format(dateFilter, 'PPP') : 'Filter by date'}
+      </Button>
 
-
-    {showDatePicker && (
-      <DateTimePicker
-      value={dateFilter || new Date()}
-       mode="date"
-       display="default"
+      {showDatePicker && (
+        <DateTimePicker
+          value={dateFilter || new Date()}
+          mode="date"
+          display="default"
           onChange={(event, selectedDate) => {
-          setShowDatePicker(false);
-          if (event.type === 'set' && selectedDate) {
-             setDateFilter(selectedDate); // user selected a date
-                 } else if (event.type === 'dismissed') {
-             setDateFilter(null); // user cancelled, remove date filter
-             }
+            setShowDatePicker(false);
+            if (event.type === 'set' && selectedDate) {
+              setDateFilter(selectedDate);
+            } else if (event.type === 'dismissed') {
+              setDateFilter(null);
+            }
           }}
         />
-    )}
-
+      )}
 
       {/* Category filter */}
       <View style={styles.filterContainer}>
         {categories.map((cat) => (
-          <TouchableOpacity
+          <Chip
             key={cat}
-            style={[styles.filterButton, categoryFilter === cat && styles.filterButtonSelected]}
+            selected={categoryFilter === cat}
             onPress={() => setCategoryFilter(cat)}
+            style={styles.filterChip}
           >
-            <Text style={[styles.filterText, categoryFilter === cat && styles.filterTextSelected]}>
-              {cat}
-            </Text>
-          </TouchableOpacity>
+            {cat}
+          </Chip>
         ))}
       </View>
 
       {/* Clear Filters Button */}
       {(categoryFilter !== 'All' || dateFilter || searchText) && (
-        <TouchableOpacity
+        <Button
+          mode="contained"
+          buttonColor="#FF3B30"
+          textColor="#fff"
           style={styles.clearButton}
           onPress={() => {
             setCategoryFilter('All');
@@ -141,8 +144,8 @@ export default function EventListScreen({ navigation }: Props) {
             setSearchText('');
           }}
         >
-          <Text style={styles.clearButtonText}>Clear Filters</Text>
-        </TouchableOpacity>
+          Clear Filters
+        </Button>
       )}
 
       {/* Event list */}
@@ -153,39 +156,39 @@ export default function EventListScreen({ navigation }: Props) {
         renderItem={({ item }) => {
           const badgeLabel = renderBadge(item);
           return (
-            <TouchableOpacity
+            <Card
               style={styles.card}
+              mode="elevated"
               onPress={() => navigation.navigate('EventDetails', { event: item })}
             >
-              <View style={{ flex: 1 }}>
-                <Text style={styles.title}>{item.title}</Text>
-                <Text style={styles.date}>{format(new Date(item.date), 'PPpp')}</Text>
-              </View>
-              <View
-                style={[styles.statusBadge, badgeLabel === 'Today' ? styles.todayBadge : null]}
-              >
-                <Text style={styles.statusText}>{badgeLabel}</Text>
-              </View>
-            </TouchableOpacity>
+              <Card.Content style={{ flexDirection: 'row', alignItems: 'center' }}>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.title}>{item.title}</Text>
+                  <Text style={styles.date}>{format(new Date(item.date), 'PPpp')}</Text>
+                </View>
+                <Chip
+                  style={[
+                    styles.statusBadge,
+                    badgeLabel === 'Today' ? styles.todayBadge : null,
+                  ]}
+                >
+                  {badgeLabel}
+                </Chip>
+              </Card.Content>
+            </Card>
           );
         }}
       />
 
       {/* Floating Add button */}
-      <TouchableOpacity
+      <FAB
+        icon="plus"
         style={styles.fab}
-        activeOpacity={0.8}
         onPress={() => navigation.navigate('AddEvent')}
-      >
-        <Text style={styles.fabText}>+</Text>
-      </TouchableOpacity>
+      />
     </View>
   );
 }
-
-
-
-
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#f8fafc' },
@@ -195,20 +198,11 @@ const styles = StyleSheet.create({
 
   searchInput: {
     margin: 16,
-    borderWidth: 1,
-    borderColor: '#D1D1D6',
-    borderRadius: 12,
-    padding: 12,
     backgroundColor: '#fff',
   },
   dateFilter: {
     marginHorizontal: 16,
     marginBottom: 10,
-    borderWidth: 1,
-    borderColor: '#D1D1D6',
-    borderRadius: 12,
-    padding: 12,
-    backgroundColor: '#fff',
   },
   filterContainer: {
     flexDirection: 'row',
@@ -216,74 +210,32 @@ const styles = StyleSheet.create({
     marginHorizontal: 16,
     marginBottom: 10,
   },
-  filterButton: {
-    borderWidth: 1,
-    borderColor: '#D1D1D6',
-    borderRadius: 20,
-    paddingVertical: 6,
-    paddingHorizontal: 14,
+  filterChip: {
     marginRight: 10,
     marginBottom: 10,
-    backgroundColor: '#FAFAFA',
   },
-  filterButtonSelected: {
-    backgroundColor: '#007AFF',
-    borderColor: '#007AFF',
-  },
-  filterText: { color: '#1C1C1E', fontWeight: '600' },
-  filterTextSelected: { color: '#fff' },
-
   clearButton: {
     marginHorizontal: 16,
     marginBottom: 10,
-    paddingVertical: 10,
     borderRadius: 12,
-    backgroundColor: '#FF3B30',
-    alignItems: 'center',
   },
-  clearButtonText: {
-    color: '#fff',
-    fontWeight: '600',
-  },
-
   card: {
-    backgroundColor: '#fff',
-    padding: 16,
-    borderRadius: 14,
     marginHorizontal: 16,
     marginVertical: 8,
-    flexDirection: 'row',
-    alignItems: 'center',
-    elevation: 3,
-    shadowColor: '#000',
-    shadowOpacity: 0.05,
-    shadowOffset: { width: 0, height: 2 },
-    shadowRadius: 4,
+    borderRadius: 14,
   },
   title: { fontSize: 16, fontWeight: '600', color: '#222' },
   date: { fontSize: 13, color: '#666', marginTop: 4 },
 
   statusBadge: {
-    backgroundColor: '#E8F0FE',
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 20,
     marginLeft: 12,
   },
-  todayBadge: { backgroundColor: '#d8fecfff' },
-  statusText: { fontSize: 12, fontWeight: '600', color: '#007AFF' },
-
+  todayBadge: {
+    backgroundColor: '#d8fecfff',
+  },
   fab: {
     position: 'absolute',
     bottom: 30,
     right: 20,
-    backgroundColor: '#007AFF',
-    height: 64,
-    width: 64,
-    borderRadius: 32,
-    justifyContent: 'center',
-    alignItems: 'center',
-    elevation: 6,
   },
-  fabText: { fontSize: 34, color: '#fff', lineHeight: 36 },
 });

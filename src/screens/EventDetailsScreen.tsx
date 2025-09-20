@@ -1,10 +1,11 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Alert } from 'react-native';
+import { View, StyleSheet, Alert } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../App';
 import { format } from 'date-fns';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { EventItem } from '../models/Event';
+import { Card, Text, Button } from 'react-native-paper';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'EventDetails'>;
 
@@ -38,22 +39,38 @@ export default function EventDetailsScreen({ route, navigation }: Props) {
 
   return (
     <View style={styles.container}>
-      <View style={styles.card}>
-        <Text style={styles.title}>{event.title}</Text>
-        <Text style={styles.date}>{format(new Date(event.date), 'EEEE, MMM d, yyyy • h:mm a')}</Text>
+      <Card style={styles.card}>
+        <Card.Content>
+          <Text style={styles.title}>{event.title}</Text>
+          <Text style={styles.date}>
+            {format(new Date(event.date), 'EEEE, MMM d, yyyy • h:mm a')}
+          </Text>
 
-        <View style={styles.separator} />
+          <View style={styles.separator} />
 
-        <View style={styles.buttonContainer}>
-          <TouchableOpacity style={styles.editButton} onPress={editEvent}>
-            <Text style={styles.buttonText}>Edit</Text>
-          </TouchableOpacity>
+          <View style={styles.buttonContainer}>
+            <Button
+              mode="contained"
+              buttonColor="#007AFF"
+              textColor="#fff"
+              style={styles.button}
+              onPress={editEvent}
+            >
+              Edit
+            </Button>
 
-          <TouchableOpacity style={styles.deleteButton} onPress={deleteEvent}>
-            <Text style={styles.buttonText}>Delete</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
+            <Button
+              mode="contained"
+              buttonColor="#FF3B30"
+              textColor="#fff"
+              style={styles.button}
+              onPress={deleteEvent}
+            >
+              Delete
+            </Button>
+          </View>
+        </Card.Content>
+      </Card>
     </View>
   );
 }
@@ -65,13 +82,7 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   card: {
-    backgroundColor: '#fff',
     borderRadius: 12,
-    padding: 24,
-    shadowColor: '#000',
-    shadowOpacity: 0.05,
-    shadowOffset: { width: 0, height: 2 },
-    shadowRadius: 4,
     elevation: 2,
   },
   title: {
@@ -93,25 +104,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
   },
-  editButton: {
+  button: {
     flex: 1,
-    backgroundColor: '#007AFF',
-    paddingVertical: 12,
     borderRadius: 10,
-    alignItems: 'center',
-    marginRight: 10,
-  },
-  deleteButton: {
-    flex: 1,
-    backgroundColor: '#FF3B30',
-    paddingVertical: 12,
-    borderRadius: 10,
-    alignItems: 'center',
-    marginLeft: 10,
-  },
-  buttonText: {
-    color: '#fff',
-    fontWeight: '600',
-    fontSize: 16,
+    marginHorizontal: 5,
+    paddingVertical: 6,
   },
 });

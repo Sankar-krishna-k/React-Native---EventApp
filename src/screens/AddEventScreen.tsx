@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from 'react-native';
+import { View, StyleSheet, ScrollView, Alert } from 'react-native';
+import { TextInput, Button, Card, Text, Chip } from 'react-native-paper';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { format } from 'date-fns';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -19,8 +20,7 @@ export default function AddEventScreen({ navigation, route }: any) {
 
   const handleSave = async () => {
     if (!title || !date || !time || !category) {
-      Alert.alert('Error', 'Please enter all fields and select a category');
-      return;
+      return Alert.alert('Please enter all fields and select a category');
     }
 
     const finalDate = new Date(date);
@@ -51,88 +51,95 @@ export default function AddEventScreen({ navigation, route }: any) {
       navigation.navigate('EventList');
     } catch (err) {
       console.error('Error saving event:', err);
-      Alert.alert('Error', 'Failed to save event');
+      Alert.alert('Failed to save event');
     }
   };
 
   return (
-    <View style={styles.container}>
+    <ScrollView style={styles.container}>
       <Text style={styles.header}>{existingEvent ? 'Edit Event' : 'Add New Event'}</Text>
 
-      <View style={styles.card}>
-        <Text style={styles.label}>Event Title</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="Enter event title"
-          value={title}
-          onChangeText={setTitle}
-        />
-
-        <Text style={styles.label}>Event Date</Text>
-        <TouchableOpacity style={styles.input} onPress={() => setShowDatePicker(true)}>
-          <Text>{date ? format(date, 'PPP') : 'Select Date'}</Text>
-        </TouchableOpacity>
-
-        <Text style={styles.label}>Event Time</Text>
-        <TouchableOpacity style={styles.input} onPress={() => setShowTimePicker(true)}>
-          <Text>{time ? format(time, 'p') : 'Select Time'}</Text>
-        </TouchableOpacity>
-
-        {showDatePicker && (
-          <DateTimePicker
-            value={date || new Date()}
-            mode="date"
-            display="default"
-            onChange={(event, selectedDate) => {
-              setShowDatePicker(false);
-              if (selectedDate) setDate(selectedDate);
-            }}
+      <Card style={styles.card}>
+        <Card.Content>
+          <TextInput
+            label="Event Title"
+            placeholder="Enter event title"
+            value={title}
+            onChangeText={setTitle}
+            mode="outlined"
+            style={styles.input}
           />
-        )}
 
-        {showTimePicker && (
-          <DateTimePicker
-            value={time || new Date()}
-            mode="time"
-            is24Hour={true}
-            display="default"
-            onChange={(event, selectedTime) => {
-              setShowTimePicker(false);
-              if (selectedTime) setTime(selectedTime);
-            }}
-          />
-        )}
+          <Button
+            mode="outlined"
+            onPress={() => setShowDatePicker(true)}
+            style={styles.input}
+          >
+            {date ? format(date, 'PPP') : 'Select Date'}
+          </Button>
 
-        <Text style={styles.label}>Category</Text>
-        <View style={styles.categoryContainer}>
-          {categories.map((cat) => (
-            <TouchableOpacity
-              key={cat}
-              style={[
-                styles.categoryButton,
-                category === cat && styles.categoryButtonSelected,
-              ]}
-              onPress={() => setCategory(cat)}
-            >
-              <Text
+          <Button
+            mode="outlined"
+            onPress={() => setShowTimePicker(true)}
+            style={styles.input}
+          >
+            {time ? format(time, 'p') : 'Select Time'}
+          </Button>
+
+          {showDatePicker && (
+            <DateTimePicker
+              value={date || new Date()}
+              mode="date"
+              display="default"
+              onChange={(event, selectedDate) => {
+                setShowDatePicker(false);
+                if (selectedDate) setDate(selectedDate);
+              }}
+            />
+          )}
+
+          {showTimePicker && (
+            <DateTimePicker
+              value={time || new Date()}
+              mode="time"
+              is24Hour={true}
+              display="default"
+              onChange={(event, selectedTime) => {
+                setShowTimePicker(false);
+                if (selectedTime) setTime(selectedTime);
+              }}
+            />
+          )}
+
+          <Text style={styles.label}>Category</Text>
+          <View style={styles.categoryContainer}>
+            {categories.map((cat) => (
+              <Chip
+                key={cat}
+                mode="outlined"
+                selected={category === cat}
+                onPress={() => setCategory(cat)}
                 style={[
-                  styles.categoryText,
-                  category === cat && styles.categoryTextSelected,
+                  styles.categoryChip,
+                  category === cat && styles.categoryChipSelected,
                 ]}
+                textStyle={category === cat ? styles.categoryTextSelected : undefined}
               >
                 {cat}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </View>
+              </Chip>
+            ))}
+          </View>
 
-        <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
-          <Text style={styles.saveButtonText}>
+          <Button
+            mode="contained"
+            onPress={handleSave}
+            style={styles.saveButton}
+          >
             {existingEvent ? 'Update Event' : 'Save Event'}
-          </Text>
-        </TouchableOpacity>
-      </View>
-    </View>
+          </Button>
+        </Card.Content>
+      </Card>
+    </ScrollView>
   );
 }
 
@@ -149,65 +156,38 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   card: {
-    backgroundColor: '#fff',
     borderRadius: 12,
-    padding: 20,
-    shadowColor: '#000',
-    shadowOpacity: 0.05,
-    shadowOffset: { width: 0, height: 2 },
-    shadowRadius: 4,
-    elevation: 2,
+    padding: 0,
+  },
+  input: {
+    marginTop: 12,
+    backgroundColor: 'white',
   },
   label: {
+    marginTop: 16,
     fontSize: 14,
     fontWeight: '600',
     color: '#6C6C70',
-    marginTop: 16,
-  },
-  input: {
-    borderWidth: 1,
-    borderColor: '#D1D1D6',
-    borderRadius: 10,
-    padding: 12,
-    marginTop: 6,
-    backgroundColor: '#FAFAFA',
   },
   categoryContainer: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     marginTop: 6,
   },
-  categoryButton: {
-    borderWidth: 1,
-    borderColor: '#D1D1D6',
-    borderRadius: 20,
-    paddingVertical: 6,
-    paddingHorizontal: 14,
+  categoryChip: {
     marginRight: 10,
     marginBottom: 10,
-    backgroundColor: '#FAFAFA',
   },
-  categoryButtonSelected: {
+  categoryChipSelected: {
     backgroundColor: '#007AFF',
     borderColor: '#007AFF',
   },
-  categoryText: {
-    color: '#1C1C1E',
-    fontWeight: '600',
-  },
   categoryTextSelected: {
     color: '#fff',
+    fontWeight: '600',
   },
   saveButton: {
-    backgroundColor: '#007AFF',
-    paddingVertical: 14,
-    borderRadius: 12,
     marginTop: 30,
-    alignItems: 'center',
-  },
-  saveButtonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '600',
+    paddingVertical: 6,
   },
 });
