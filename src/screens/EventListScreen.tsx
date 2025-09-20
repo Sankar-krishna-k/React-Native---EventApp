@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, StyleSheet, FlatList } from 'react-native';
+import { View, StyleSheet, FlatList, Image, TouchableOpacity, Alert } from 'react-native';
 import {
   Text,
   TextInput,
@@ -14,6 +14,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../App';
+import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
+
 
 type Props = NativeStackScreenProps<RootStackParamList, 'EventList'>;
 
@@ -23,6 +25,7 @@ export default function EventListScreen({ navigation }: Props) {
   const [categoryFilter, setCategoryFilter] = useState<EventItem['category'] | 'All'>('All');
   const [dateFilter, setDateFilter] = useState<Date | null>(null);
   const [showDatePicker, setShowDatePicker] = useState(false);
+  const [user, setUser] = useState<{ name: string; profilePhotoUrl: string } | null>(null);
 
   const categories: (EventItem['category'] | 'All')[] = [
     'All',
@@ -31,6 +34,25 @@ export default function EventListScreen({ navigation }: Props) {
     'Birthday',
     'Meeting',
   ];
+
+  const loadUser = async () => {
+    const storedUser = await AsyncStorage.getItem('user');
+    if (storedUser) setUser(JSON.parse(storedUser));
+  };
+
+  const logout = async () => {
+    Alert.alert('Logout', 'Are you sure you want to logout?', [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Logout',
+        style: 'destructive',
+        onPress: async () => {
+          await AsyncStorage.clear();
+          navigation.replace('Login');
+        },
+      },
+    ]);
+  };
 
   const loadEvents = async () => {
     try {
@@ -50,7 +72,10 @@ export default function EventListScreen({ navigation }: Props) {
   };
 
   useEffect(() => {
-    const unsubscribe = navigation.addListener('focus', loadEvents);
+    const unsubscribe = navigation.addListener('focus', () => {
+      loadEvents();
+      loadUser();
+    });
     return unsubscribe;
   }, [navigation]);
 
@@ -79,8 +104,22 @@ export default function EventListScreen({ navigation }: Props) {
     <View style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>My Events</Text>
-        <Text style={styles.headerSubtitle}>{filteredEvents.length} upcoming</Text>
+        <View style={{ flex: 1 }}>
+          <Text style={styles.headerTitle}>My Events</Text>
+          <Text style={styles.headerSubtitle}>{filteredEvents.length} upcoming</Text>
+        </View>
+
+        {user && (
+          <View style={styles.userContainer}>
+            <TouchableOpacity onPress={logout}>
+              <MaterialIcons name="logout" size={28} color="#fff" style={{ marginRight: 10 }} />
+            </TouchableOpacity>
+            <Image
+              source={{ uri: user.profilePhotoUrl }}
+              style={styles.profilePhoto}
+            />
+          </View>
+        )}
       </View>
 
       {/* Search bar */}
@@ -92,7 +131,7 @@ export default function EventListScreen({ navigation }: Props) {
         onChangeText={setSearchText}
       />
 
-      {/* Filter by date */}
+      {/* Date filter */}
       <Button
         mode="outlined"
         style={styles.dateFilter}
@@ -131,7 +170,6 @@ export default function EventListScreen({ navigation }: Props) {
         ))}
       </View>
 
-      {/* Clear Filters Button */}
       {(categoryFilter !== 'All' || dateFilter || searchText) && (
         <Button
           mode="contained"
@@ -192,50 +230,28 @@ export default function EventListScreen({ navigation }: Props) {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#f8fafc' },
-  header: { padding: 20, backgroundColor: '#007AFF' },
+  header: {
+    padding: 16,
+    backgroundColor: '#007AFF',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
   headerTitle: { fontSize: 28, fontWeight: '800', color: '#fff' },
   headerSubtitle: { fontSize: 14, color: '#e0e0e0', marginTop: 4 },
 
-  searchInput: {
-    margin: 16,
-    backgroundColor: '#fff',
-  },
-  dateFilter: {
-    marginHorizontal: 16,
-    marginBottom: 10,
-  },
-  filterContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    marginHorizontal: 16,
-    marginBottom: 10,
-  },
-  filterChip: {
-    marginRight: 10,
-    marginBottom: 10,
-  },
-  clearButton: {
-    marginHorizontal: 16,
-    marginBottom: 10,
-    borderRadius: 12,
-  },
-  card: {
-    marginHorizontal: 16,
-    marginVertical: 8,
-    borderRadius: 14,
-  },
+  userContainer: { flexDirection: 'row', alignItems: 'center' },
+  profilePhoto: { width: 40, height: 40, borderRadius: 20 },
+
+  searchInput: { margin: 16, backgroundColor: '#fff' },
+  dateFilter: { marginHorizontal: 16, marginBottom: 10 },
+  filterContainer: { flexDirection: 'row', flexWrap: 'wrap', marginHorizontal: 16, marginBottom: 10 },
+  filterChip: { marginRight: 10, marginBottom: 10 },
+  clearButton: { marginHorizontal: 16, marginBottom: 10, borderRadius: 12 },
+  card: { marginHorizontal: 16, marginVertical: 8, borderRadius: 14 },
   title: { fontSize: 16, fontWeight: '600', color: '#222' },
   date: { fontSize: 13, color: '#666', marginTop: 4 },
-
-  statusBadge: {
-    marginLeft: 12,
-  },
-  todayBadge: {
-    backgroundColor: '#d8fecfff',
-  },
-  fab: {
-    position: 'absolute',
-    bottom: 30,
-    right: 20,
-  },
+  statusBadge: { marginLeft: 12 },
+  todayBadge: { backgroundColor: '#d8fecfff' },
+  fab: { position: 'absolute', bottom: 30, right: 20 },
 });
